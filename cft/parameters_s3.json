@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "derekroot"
+  }, 
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "Rekognition Blog"
+  }, 
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "m3.large"
+  }, 
+  {
+    "ParameterKey": "SourceBucketName",
+    "ParameterValue": "dgraeberaws-blogs"
+  },
+  {
+    "ParameterKey": "NotebookZipName",
+    "ParameterValue": "bacon_notebook.zip"
+  }
+]

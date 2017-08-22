@@ -1,0 +1,222 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Neo4j on Ubuntu with Anaconda and Jupyter - Reckognition Blogpost",
+  "Parameters": {
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+    },
+    "Environment": {
+      "Description": "Name of this environment",
+      "Type": "String",
+      "Default": "Rekognition Blog"
+    },
+    "InstanceType": {
+      "Description":"WebServer EC2 instance type",
+      "Type":"String",
+      "Default":"m3.large",
+      "AllowedValues": [
+        "m3.large",
+        "m3.xlarge"
+      ],
+      "ConstraintDescription":"must be a valid EC2 instance type."
+    },
+
+    "NotebokGitRepo": {
+      "Description": "The git repo of the notebook",
+      "Type": "String",
+      "Default": "http://www.github.com/<somerepo>"
+    }
+  },
+  "Mappings": {
+    "RegionMap": {
+      "ap-northeast-1": {"AMI": "ami-fda3f19a"},
+      "ap-southeast-1": {"AMI": "ami-cee95bad"},
+      "eu-central-1": {"AMI": "ami-0ae93e65"},
+      "eu-west-1": {"AMI": "ami-719da917"},
+      "sa-east-1": {"AMI": "ami-cc99f8a0"},
+      "us-east-1": {"AMI": "ami-ab8926bd"},
+      "us-west-1": {"AMI": "ami-37114957"},
+      "us-west-2": {"AMI": "ami-a97bf5c9"}
+    }
+  },
+  "Resources": {
+        "roleRek": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {"Service": [ "ec2.amazonaws.com" ]},
+                  "Action": [ "sts:AssumeRole" ]
+                }
+              ]
+            },
+            "Path": "/"
+          }
+        },
+        "policyRek": {
+          "Type": "AWS::IAM::Policy",
+          "Properties": {
+            "PolicyName": "RekBlogpostPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "rekognition:*",
+                    "s3:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "Roles": [
+              {"Ref": "roleRek"}
+            ]
+          }
+        },
+        "profileRek": {
+          "Type": "AWS::IAM::InstanceProfile",
+          "Properties": {
+            "Path": "/",
+            "Roles": [
+              {"Ref": "roleRek"}
+            ]
+          }
+        },
+
+    "instanceRekBlogpost": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI"]},
+        "KeyName": { "Ref": "KeyName" },
+        "InstanceType": { "Ref": "InstanceType" },
+        "IamInstanceProfile": { "Ref": "profileRek" },
+        "Tags": [
+          {"Key": "Name", "Value": { "Fn::Join": [" ", [ { "Ref": "AWS::StackName" },"RekBlogpost" ]]}}
+        ],
+        "SecurityGroups":[{"Ref":"sgRekBlogpost"}],
+
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": ["", [
+              "#!/bin/bash\n",
+              "#set -e -x\n",
+              "###   Install Neo4j\n",
+
+              "sudo echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections\n",
+              "sudo add-apt-repository ppa:webupd8team/java -y\n",
+              "sudo apt update -y\n",
+              "sudo apt install oracle-java8-installer -y\n",
+              "sudo apt install oracle-java8-set-default -y\n",
+
+
+              "wget -O - https://debian.neo4j.org/neotechnology.gpg.key | apt-key add -\n",
+              "echo 'deb http://debian.neo4j.org/repo stable/' | tee -a /etc/apt/sources.list.d/neo4j.list > /dev/null\n",
+              "apt-get update -y\n",
+
+              "apt-get install neo4j -y\n",
+              "apt-get install unzip -y\n",
+
+              "cd /var/lib/neo4j/data/databases\n",
+              "wget http://example-data.neo4j.org/files/cineasts_12k_movies_50k_actors_2.1.6.zip\n",
+              "unzip cineasts_12k_movies_50k_actors_2.1.6.zip\n",
+              "chown neo4j:neo4j /var/lib/neo4j/data/databases/cineasts_12k_movies_50k_actors.db -R\n",
+
+              "echo 'dbms.allow_format_migration=true'>> /etc/neo4j/neo4j.conf\n",
+              "echo 'dbms.active_database=cineasts_12k_movies_50k_actors.db'>> /etc/neo4j/neo4j.conf\n",
+              "echo 'dbms.connectors.default_listen_address=0.0.0.0'>> /etc/neo4j/neo4j.conf\n",
+
+              "service neo4j restart\n",
+
+              "#Get Notebooks ready\n",
+
+              "mkdir /opt/notebook\n",
+              "cd /opt/notebook\n",
+              "apt-get install git -y\n",
+              "git clone ",{"Ref":"NotebokGitRepo"},"\n",
+              "chmod 777 /opt/notebook -R\n"
+
+            ]]
+          }
+        }
+
+      }
+    },
+    "sgRekBlogpost": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to Neo4j and Jupyter",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8888",
+            "ToPort": "8888",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "7474",
+            "ToPort": "7474",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "7473",
+            "ToPort": "7473",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "7687",
+            "ToPort": "7687",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                " ",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "RekBlogpost"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "IPPublicInstance": {
+      "Value": {
+        "Fn::GetAtt": [
+          "instanceRekBlogpost",
+          "PublicIp"
+        ]
+      }
+    },
+    "DNSPublicInstance": {
+      "Value": {
+        "Fn::GetAtt": [
+          "instanceRekBlogpost",
+          "PublicDnsName"
+        ]
+      }
+    }
+  }
+}

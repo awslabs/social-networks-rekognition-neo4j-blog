@@ -1,0 +1,37 @@
+commands
+
+
+#### for the s3 version
+
+# Using the parameter files
+aws cloudformation create-stack --stack-name rekognitionblog  \
+    --template-body file://rek-neo4j-blogpost_s3.template \
+    --parameters file://parameters_s3.json \
+    --capabilities CAPABILITY_NAMED_IAM
+
+# Passing in parameters
+aws cloudformation create-stack --stack-name rekognitionblog  \
+    --template-body file://rek-neo4j-blogpost_s3.template \
+    --parameters ParameterKey=KeyName,ParameterValue=derekroot,UsePreviousValue=true \
+    ParameterKey=SourceBucketName,ParameterValue=dgraeberaws-blogs,UsePreviousValue=true \
+    ParameterKey=NotebookZipName,ParameterValue=bacon_notebook.zip,UsePreviousValue=true \
+    --capabilities CAPABILITY_NAMED_IAM
+
+
+
+
+
+### for the git version
+aws cloudformation create-stack --stack-name rekognitionblog  
+    --template-body file://rek-neo4j-blogpost_git.template
+    --parameters file://parameters_git.json
+
+# Passing in parameters
+aws cloudformation create-stack --stack-name rekognitionblog  \
+    --template-body file://rek-neo4j-blogpost_git.template \
+    --parameters ParameterKey=KeyName,ParameterValue=derekroot,UsePreviousValue=true \
+    --capabilities CAPABILITY_NAMED_IAM
+
+
+### Describe the stack to get the DNS and IP addresses
+aws cloudformation describe-stacks --stack-name rekognitionblog
