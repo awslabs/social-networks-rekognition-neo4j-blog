@@ -26,7 +26,7 @@
     "NotebokGitRepo": {
       "Description": "The git repo of the notebook",
       "Type": "String",
-      "Default": "http://www.github.com/<somerepo>"
+      "Default": "https://github.com/awslabs/social-networks-rekognition-neo4j-blog"
     }
   },
   "Mappings": {
