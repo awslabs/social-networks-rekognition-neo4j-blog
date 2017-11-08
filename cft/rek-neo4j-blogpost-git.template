@@ -118,7 +118,7 @@
               "echo 'deb http://debian.neo4j.org/repo stable/' | tee -a /etc/apt/sources.list.d/neo4j.list > /dev/null\n",
               "apt-get update -y\n",
 
-              "apt-get install neo4j -y\n",
+              "apt-get install neo4j=3.1.7 -y\n",
               "apt-get install unzip -y\n",
 
               "cd /var/lib/neo4j/data/databases\n",
@@ -130,7 +130,8 @@
               "echo 'dbms.active_database=cineasts_12k_movies_50k_actors.db'>> /etc/neo4j/neo4j.conf\n",
               "echo 'dbms.connectors.default_listen_address=0.0.0.0'>> /etc/neo4j/neo4j.conf\n",
 
-              "service neo4j restart\n",
+              "service neo4j stop\n",
+              "service neo4j start\n",
 
               "#Get Notebooks ready\n",
 
