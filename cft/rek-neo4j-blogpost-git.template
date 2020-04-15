@@ -66,8 +66,34 @@
                 {
                   "Effect": "Allow",
                   "Action": [
-                    "rekognition:*",
-                    "s3:*"
+                    "rekognition:DetectLabels",
+                    "rekognition:ListCollections",
+                    "rekognition:StartFaceSearch",
+                    "rekognition:StartContentModeration",
+                    "rekognition:DetectFaces",
+                    "rekognition:CreateProjectVersion",
+                    "rekognition:IndexFaces",
+                    "rekognition:GetFaceDetection",
+                    "rekognition:StartLabelDetection",
+                    "rekognition:RecognizeCelebrities",
+                    "rekognition:CompareFaces",
+                    "rekognition:DetectText",
+                    "rekognition:GetCelebrityInfo",
+                    "rekognition:StartCelebrityRecognition",
+                    "rekognition:GetLabelDetection",
+                    "rekognition:ListFaces",
+                    "rekognition:StartFaceDetection",
+                    "rekognition:CreateCollection",
+                    "rekognition:CreateProject",
+                    "rekognition:GetFaceSearch",
+                    "rekognition:SearchFaces",
+                    "rekognition:ListStreamProcessors",
+                    "rekognition:SearchFacesByImage",
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:ListAllMyBuckets",
+                    "s3:ListBucket",
+                    "s3:GetObjectVersion"
                   ],
                   "Resource": "*"
                 }
